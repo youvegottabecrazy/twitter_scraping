@@ -1,10 +1,15 @@
+#!/usr/bin/env python3 
+#   Removed zip creation from original. 
+#   Added incremental temp filesaves so the process can be resumed.
+#   Once finished, you may delete the incremental_* files.
+#
+import sys
+import os
 import tweepy
 import json
 import math
 import glob
 import csv
-import zipfile
-import zlib
 from tweepy import TweepError
 from time import sleep
 
@@ -20,7 +25,6 @@ api = tweepy.API(auth)
 user = user.lower()
 output_file = '{}.json'.format(user)
 output_file_short = '{}_short.json'.format(user)
-compression = zipfile.ZIP_DEFLATED
 
 with open('all_ids.json') as f:
     ids = json.load(f)
@@ -34,24 +38,43 @@ limit = len(ids)
 i = math.ceil(limit / 100)
 
 for go in range(i):
+    all_data_batch = []
     print('currently getting {} - {}'.format(start, end))
-    sleep(6)  # needed to prevent hitting API rate limit
     id_batch = ids[start:end]
+    incremental_fn = 'incremental.{}.{}.json'.format(user,end)
     start += 100
     end += 100
-    tweets = api.statuses_lookup(id_batch)
+    tweets = None
+    if os.path.isfile(incremental_fn):
+        print("Found existing file %s" % incremental_fn)
+        with open(incremental_fn) as f:
+            tweets = json.load(f)
+    while not tweets:
+        print("local file not found, fetching.")
+        sleep(6)  # needed to prevent hitting API rate limit
+        try:
+            tweets = api.statuses_lookup(id_batch)
+        except Exception as e:
+            print("Exception: %s\nwill retry..." % e)
     for tweet in tweets:
-        all_data.append(dict(tweet._json))
-
+        try:
+            all_data.append(dict(tweet._json))
+            all_data_batch.append(dict(tweet._json))
+        except:
+            all_data.append(tweet)
+            all_data_batch.append(tweet)
+    if not os.path.isfile(incremental_fn):
+        print ("write %s" % incremental_fn)
+        with open(incremental_fn, 'w') as outfile:
+            json.dump(all_data_batch, outfile)
+    
 print('metadata collection complete')
+print('sorting by tweet id')
+all_data = sorted(all_data, key=lambda k: k['id'], reverse=False)
+
 print('creating master json file')
 with open(output_file, 'w') as outfile:
     json.dump(all_data, outfile)
-
-print('creating ziped master json file')
-zf = zipfile.ZipFile('{}.zip'.format(user), mode='w')
-zf.write(output_file, compress_type=compression)
-zf.close()
 
 results = []
 

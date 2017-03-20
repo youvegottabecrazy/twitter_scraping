@@ -1,10 +1,14 @@
 ## Twitter Scraper
 
+Forked from https://github.com/bpb27/twitter_scraping. Added functionality: resume from failure, create sqlite3 database. Removed: creation of zip file.
+
 Twitter makes it hard to get all of a user's tweets (assuming they have more than 3200). This is a way to get around that using Python, Selenium, and Tweepy.
 
 Essentially, we will use Selenium to open up a browser and automatically visit Twitter's search page, searching for a single user's tweets on a single day. If we want all tweets from 2015, we will check all 365 days / pages. This would be a nightmare to do manually, so the `scrape.py` script does it all for you - all you have to do is input a date range and a twitter user handle, and wait for it to finish.
 
 The `scrape.py` script collects tweet ids. If you know a tweet's id number, you can get all the information available about that tweet using Tweepy - text, timestamp, number of retweets / replies / favorites, geolocation, etc. Tweepy uses Twitter's API, so you will need to get API keys. Once you have them, you can run the `get_metadata.py` script.
+
+To create a simple sqlite3 database, run create_sqlite3.py last.
 
 ## Requirements
 
@@ -50,8 +54,12 @@ The `scrape.py` script collects tweet ids. If you know a tweet's id number, you 
 - open up `get_metadata.py` and edit the user variable (and save the file)
 - run `python3 get_metadata.py`
 - this will get metadata for every tweet id in `all_ids.json`
-- it will create 4 files
+- it will create 3 output files
   - `username.json` (master file with all metadata)
-  - `username.zip` (a zipped file of the master file with all metadata)
   - `username_short.json` (smaller master file with relevant metadata fields)
   - `username.csv` (csv version of the smaller master file)
+- Remove the temporary incremental files when finished. They were there to enable resuming the job if it failed.
+
+## Creating a sqlite3 database
+- Edit the create_sqlite3.py script
+- Run the create_sqlite3.py script

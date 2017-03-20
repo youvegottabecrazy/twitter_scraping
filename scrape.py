@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
@@ -9,12 +10,11 @@ import datetime
 # edit these three variables
 user = 'realdonaldtrump'
 start = datetime.datetime(2010, 1, 1)  # year, month, day
-end = datetime.datetime(2016, 12, 7)  # year, month, day
+end = datetime.datetime(2017, 03, 17)  # year, month, day
 
 # only edit these if you're having problems
 delay = 1  # time to wait on each page load before reading the page
-driver = webdriver.Safari()  # options are Chrome() Firefox() Safari()
-
+driver = webdriver.Chrome() # options are Chrome() Firefox() Safari()
 
 # don't mess with this stuff
 twitter_ids_filename = 'all_ids.json'
